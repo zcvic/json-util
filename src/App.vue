@@ -9,7 +9,11 @@ const showNotification = ref(false)
 
 // 更新 JSON
 function updateJson(newJson: any) {
-  jsonData.value = newJson
+  try {
+    jsonData.value = JSON.parse(newJson)
+  } catch {
+    jsonData.value = newJson
+  }
 }
 
 // 显示复制提示
