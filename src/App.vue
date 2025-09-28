@@ -14,6 +14,7 @@ function updateJson(newJson: any) {
   } catch {
     jsonData.value = newJson
   }
+  console.log(jsonData.value)
 }
 
 // 显示复制提示
@@ -28,8 +29,8 @@ function triggerNotification() {
     <h1>JSON树形格式化工具</h1>
 
     <div class="layout">
-      <JsonInput :data="jsonData" @update="updateJson" @copied="triggerNotification" />
-      <JsonTree :data="jsonData" @update="updateJson" @copied="triggerNotification" />
+      <JsonInput class="chunk" :data="jsonData" @update="updateJson" @copied="triggerNotification" />
+      <JsonTree class="chunk" :data="jsonData" @update="updateJson" @copied="triggerNotification" />
     </div>
 
     <CopyNotification v-if="showNotification" />
@@ -54,6 +55,11 @@ h1 {
   display: flex;
   gap: 0px 50px;
   min-height: 500px;
+}
+
+.chunk {
+  flex: 1 1 50%;
+  min-width: 0;
 }
 
 @media (max-width: 900px) {

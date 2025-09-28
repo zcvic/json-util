@@ -67,6 +67,8 @@ function clearInput() {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 80vh;
+  min-height: 500px;
 }
 
 .panel-header {
@@ -89,6 +91,8 @@ textarea {
   font-family: monospace;
   font-size: 14px;
   resize: none;
+  min-height: 400px;
+  overflow-y: auto;
 }
 
 .buttons {
@@ -119,5 +123,16 @@ button.clear {
 
 button:not(.copy):not(.clear) {
   background-color: #3498db;
+}
+
+@media (max-width: 768px) {
+  .left-panel {
+    height: 400px;
+    min-height: 400px;
+  }
+
+  textarea {
+    min-height: 300px;
+  }
 }
 </style>

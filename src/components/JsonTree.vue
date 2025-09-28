@@ -82,6 +82,8 @@ expandedKeys['root'] = true;
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 80vh;
+  min-height: 500px;
 }
 
 .panel-header {
@@ -89,6 +91,7 @@ expandedKeys['root'] = true;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .panel-title {
@@ -103,6 +106,8 @@ expandedKeys['root'] = true;
   background-color: #f9f9f9;
   flex: 1;
   overflow: hidden;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .buttons {
@@ -158,6 +163,11 @@ button:hover {
 }
 
 @media (max-width: 768px) {
+  .output-section {
+    height: 400px;
+    min-height: 400px;
+  }
+
   .panel-header {
     flex-direction: column;
     align-items: stretch;
