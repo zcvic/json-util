@@ -13,9 +13,21 @@ const expandedKeys = reactive<Record<string, boolean>>({});
 
 function copyTree() {
   if (props.data) {
-    const jsonString = JSON.stringify(props.data, null, 2)
-    navigator.clipboard.writeText(jsonString)
-    emit('copied')
+    console.log(props.data);
+
+    // 创建处理后的数据副本
+    const processedData = { ...props.data };
+
+    // 遍历所有属性，将内层对象字符串化
+    Object.keys(processedData).forEach(key => {
+      if (typeof processedData[key] === 'object' && processedData[key] !== null) {
+        processedData[key] = JSON.stringify(processedData[key]);
+      }
+    });
+    console.log(processedData);
+    const jsonString = JSON.stringify(processedData, null, 2);
+    navigator.clipboard.writeText(jsonString);
+    emit('copied');
   }
 }
 
