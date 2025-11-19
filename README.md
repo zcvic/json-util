@@ -1,39 +1,138 @@
-# json-util
+# JSON Util - JSON格式化工具
 
-This template should help get you started developing with Vue 3 in Vite.
+一个基于Vue 3 + TypeScript开发的现代化JSON格式化、可视化和编辑工具。
 
-## Recommended IDE Setup
+## 🚀 功能特性
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+### 核心功能
+- **JSON格式化** - 支持JSON字符串的美化和格式化
+- **树形可视化** - 以树形结构直观展示JSON数据
+- **内联编辑** - 支持直接在树形视图中编辑JSON值
+- **双向同步** - 输入框和树形视图实时同步
+- **一键复制** - 快速复制JSON到剪贴板
 
-## Type Support for `.vue` Imports in TS
+### 交互功能
+- **展开/收起** - 树形节点支持独立展开或收起
+- **展开全部** - 一键展开所有树形节点
+- **收起至第一层** - 快速收起所有深层节点
+- **格式化验证** - 自动验证JSON格式并提示错误
+- **清空重置** - 一键清空所有内容
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+### 用户体验
+- **复制通知** - 复制成功后的视觉反馈
+- **响应式设计** - 适配桌面和移动设备
+- **错误提示** - 友好的错误信息提示
+- **代码高亮** - 不同类型值的颜色区分
 
-## Customize configuration
+## 🛠 技术栈
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+- **前端框架**: Vue 3.5.18
+- **开发语言**: TypeScript
+- **构建工具**: Vite
+- **状态管理**: Pinia
+- **路由管理**: Vue Router
+- **代码规范**: ESLint + Prettier
 
-## Project Setup
+## 📦 安装和运行
 
-```sh
+### 环境要求
+- Node.js >= 20.19.0 或 >= 22.12.0
+
+### 安装依赖
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
-
-```sh
+### 开发模式
+```bash
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
-
-```sh
+### 构建生产版本
+```bash
 npm run build
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+### 预览生产版本
+```bash
+npm run preview
+```
 
-```sh
+### 代码检查
+```bash
 npm run lint
 ```
+
+### 代码格式化
+```bash
+npm run format
+```
+
+## 🎯 使用说明
+
+### 基本操作
+
+1. **输入JSON**
+   - 在左侧输入框中粘贴或输入JSON字符串
+   - 点击"格式化"按钮进行美化和验证
+
+2. **树形查看**
+   - 右侧以树形结构展示JSON数据
+   - 点击展开/收起图标控制节点显示
+
+3. **编辑JSON**
+   - 在树形视图中直接点击值进行编辑
+   - 支持字符串、数字、布尔值、null等类型
+
+4. **复制功能**
+   - 点击"复制"按钮复制当前内容
+   - 复制成功会在右上角显示提示
+
+### 快捷功能
+
+- **展开全部**: 一键展开所有树形节点
+- **收起至第一层**: 收起所有深层节点，只显示第一层
+- **清空**: 快速清空所有内容重新开始
+
+### 数据类型支持
+
+- **字符串**: 红色显示，支持双引号输入
+- **数字**: 蓝色显示，支持整数和浮点数
+- **布尔值**: 蓝绿色显示，支持true/false
+- **null**: 灰色显示，支持null值
+- **对象和数组**: 支持嵌套结构和完整操作
+
+## 📱 界面预览
+
+- **桌面端**: 左右分栏布局，输入框和树形视图并列显示
+- **移动端**: 上下堆叠布局，适配小屏幕操作
+
+## 🔧 项目结构
+
+```
+src/
+├── components/          # 组件目录
+│   ├── JsonInput.vue   # JSON输入组件
+│   ├── JsonTree.vue    # 树形视图组件
+│   ├── JsonNode.vue    # 树形节点组件
+│   └── CopyNotification.vue # 复制通知组件
+├── App.vue             # 主应用组件
+└── main.ts            # 应用入口
+```
+
+## 📝 开发说明
+
+- 使用Vue 3 Composition API
+- 遵循TypeScript严格模式
+- 代码规范通过ESLint和Prettier保证
+- 支持Vue DevTools调试
+
+## 🚀 部署
+
+项目支持GitHub Pages自动部署，详见 `.github/workflows/deploy.yml` 配置。
+
+## 📄 许可证
+
+本项目为开源项目，遵循MIT许可证。
+
+---

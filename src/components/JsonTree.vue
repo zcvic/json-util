@@ -8,23 +8,18 @@ const emit = defineEmits<{
   (e: 'copied'): void
 }>()
 
-// 用于存储每个节点的展开状态，键为路径（路径递归包含子节点）
 const expandedKeys = reactive<Record<string, boolean>>({});
 
 function copyTree() {
   if (props.data) {
-    console.log(props.data);
-
-    // 创建处理后的数据副本
     const processedData = { ...props.data };
-
-    // 遍历所有属性，将内层对象字符串化
+    
     Object.keys(processedData).forEach(key => {
       if (typeof processedData[key] === 'object' && processedData[key] !== null) {
         processedData[key] = JSON.stringify(processedData[key]);
       }
     });
-    console.log(processedData);
+    
     const jsonString = JSON.stringify(processedData, null, 2);
     navigator.clipboard.writeText(jsonString);
     emit('copied');
@@ -35,11 +30,9 @@ function toggleExpand(path: string) {
   expandedKeys[path] = !expandedKeys[path]
 }
 
-// 展开所有节点
 function expandAll() {
   if (!props.data) return
 
-  // 递归展开所有节点
   const expandRecursive = (obj: any, currentPath: string) => {
     if (typeof obj === 'object' && obj !== null) {
       expandedKeys[currentPath] = true
@@ -59,13 +52,242 @@ function expandAll() {
 function collapseToFirstLevel() {
   if (!props.data) return;
 
-  // 清空所有展开状态
   Object.keys(expandedKeys).forEach(key => {
     delete expandedKeys[key];
   });
 
-  // 只展开第一层
   expandedKeys['root'] = true;
+}
+
+function addChild(path?: string) {
+  if (!props.data) return;
+
+  const addToPath = (obj: any, targetPath: string, newData: any): boolean => {
+    if (targetPath === 'root') {
+      if (typeof obj === 'object' && obj !== null) {
+        let newKey = 'newKey';
+        let counter = 1;
+        while (obj.hasOwnProperty(newKey)) {
+          newKey = `newKey${counter}`;
+          counter++;
+        }
+        obj[newKey] = newData;
+        return true;
+      }
+      return false;
+    }
+
+    const pathParts = targetPath.split('.').slice(1);
+    let current = obj;
+    
+    for (let i = 0; i < pathParts.length; i++) {
+      if (typeof current !== 'object' || current === null) {
+        return false;
+      }
+      current = current[pathParts[i]];
+    }
+    
+    if (typeof current === 'object' && current !== null) {
+      let newKey = 'newKey';
+      let counter = 1;
+      while (current.hasOwnProperty(newKey)) {
+        newKey = `newKey${counter}`;
+        counter++;
+      }
+      current[newKey] = newData;
+      return true;
+    }
+    
+    return false;
+  };
+
+  const newData = '';
+  const targetPath = path || 'root';
+  const updatedData = JSON.parse(JSON.stringify(props.data));
+  const success = addToPath(updatedData, targetPath, newData);
+  
+  if (success) {
+    emit('update', updatedData);
+    
+    expandedKeys[targetPath] = true;
+    
+    if (targetPath !== 'root') {
+      const pathParts = targetPath.split('.');
+      const parentPath = pathParts.slice(0, -1).join('.') || 'root';
+      expandedKeys[parentPath] = true;
+    }
+  }
+}
+
+function deleteChild(key: string | number) {
+  if (!props.data) return;
+
+  const updatedData = JSON.parse(JSON.stringify(props.data));
+  let success = false;
+  
+  if (typeof key === 'string' && key.includes('.')) {
+    success = deleteByPath(updatedData, key);
+  } else {
+    const keyStr = String(key);
+    if (Array.isArray(updatedData)) {
+      const index = Number(keyStr);
+      if (!isNaN(index) && index >= 0 && index < updatedData.length) {
+        updatedData.splice(index, 1);
+        success = true;
+      }
+    } else {
+      if (keyStr in updatedData) {
+        delete updatedData[keyStr];
+        success = true;
+      }
+    }
+  }
+  
+  if (success) {
+    emit('update', updatedData);
+  }
+}
+
+function deleteByPath(obj: any, path: string) {
+  if (path === 'root') return false;
+  
+  const pathParts = path.split('.').slice(1);
+  let current = obj;
+  
+  for (let i = 0; i < pathParts.length - 1; i++) {
+    if (typeof current !== 'object' || current === null || !(pathParts[i] in current)) {
+      return false;
+    }
+    current = current[pathParts[i]];
+  }
+  
+  const lastKey = pathParts[pathParts.length - 1];
+  if (Array.isArray(current)) {
+    const index = parseInt(lastKey);
+    if (!isNaN(index) && index >= 0 && index < current.length) {
+      current.splice(index, 1);
+      return true;
+    }
+  } else if (typeof current === 'object' && current !== null && lastKey in current) {
+    delete current[lastKey];
+    return true;
+  }
+  
+  return false;
+}
+
+function updateJsonData(updateData: any) {
+  if (!props.data) return;
+
+  if (typeof updateData === 'object' && updateData !== null && 'path' in updateData) {
+    const { path, key, value } = updateData;
+    const updatedData = JSON.parse(JSON.stringify(props.data));
+    
+    function isSerializableJsonString(value: unknown): boolean {
+      if (typeof value !== 'string') return false;
+      try {
+        const parsed = JSON.parse(value);
+        return typeof parsed === 'object' && parsed !== null;
+      } catch {
+        return false;
+      }
+    }
+    
+    const navigateAndUpdate = (obj: any, targetPath: string, targetKey: string, newValue: any) => {
+      if (targetPath === 'root') {
+        if (targetKey === '') {
+          return newValue;
+        } else {
+          obj[targetKey] = newValue;
+          return obj;
+        }
+      } else {
+        const pathParts = targetPath.split('.').slice(1);
+        let current = obj;
+        
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          if (typeof current !== 'object' || current === null) {
+            return obj;
+          }
+          current = current[pathParts[i]];
+        }
+        
+        const parent = current;
+        const lastKey = pathParts[pathParts.length - 1];
+        
+        if (targetKey === '') {
+          parent[lastKey] = newValue;
+        } else {
+          parent[lastKey][targetKey] = newValue;
+        }
+        
+        return obj;
+      }
+    };
+    
+    const result = navigateAndUpdate(updatedData, path, key, value);
+    emit('update', result);
+  } else {
+    emit('update', updateData);
+  }
+}
+
+function addSibling(parentPath: string, index: number) {
+  if (!props.data) return;
+
+  const addSiblingToPath = (obj: any, targetPath: string, insertIndex: number, newData: any): boolean => {
+    if (targetPath === 'root') {
+      if (typeof obj === 'object' && obj !== null && !Array.isArray(obj)) {
+        let newKey = 'newKey';
+        let counter = 1;
+        while (obj.hasOwnProperty(newKey)) {
+          newKey = `newKey${counter}`;
+          counter++;
+        }
+        obj[newKey] = newData;
+        return true;
+      }
+      return false;
+    }
+
+    const pathParts = targetPath.split('.').slice(1);
+    let current = obj;
+    
+    for (let i = 0; i < pathParts.length; i++) {
+      if (typeof current !== 'object' || current === null) {
+        return false;
+      }
+      current = current[pathParts[i]];
+    }
+    
+    if (Array.isArray(current)) {
+      current.splice(insertIndex, 0, newData);
+    } else if (typeof current === 'object' && current !== null) {
+      let newKey = 'newKey';
+      let counter = 1;
+      while (current.hasOwnProperty(newKey)) {
+        newKey = `newKey${counter}`;
+        counter++;
+      }
+      current[newKey] = newData;
+    }
+    
+    return true;
+  };
+
+  const newData = '';
+  const updatedData = JSON.parse(JSON.stringify(props.data));
+  const success = addSiblingToPath(updatedData, parentPath, index, newData);
+  
+  if (success) {
+    emit('update', updatedData);
+    
+    if (parentPath !== 'root') {
+      expandedKeys[parentPath] = true;
+    } else {
+      expandedKeys['root'] = true;
+    }
+  }
 }
 
 expandedKeys['root'] = true;
@@ -82,8 +304,18 @@ expandedKeys['root'] = true;
       </div>
     </div>
     <div class="output-section">
-      <JsonNode :expandedKeys="expandedKeys" v-if="data" :value="data" path="root" @update="emit('update', $event)"
-        @toggle="toggleExpand" />
+      <JsonNode 
+        :expandedKeys="expandedKeys" 
+        v-if="data" 
+        :value="data" 
+        path="root" 
+        :isRoot="true"
+        @update="updateJsonData($event)"
+        @toggle="toggleExpand"
+        @addChild="addChild"
+        @deleteChild="deleteChild"
+        @addSibling="addSibling"
+      />
       <div v-else class="empty">暂无数据</div>
     </div>
   </div>
@@ -195,3 +427,4 @@ button:hover {
   }
 }
 </style>
+

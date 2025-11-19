@@ -9,7 +9,6 @@ const emit = defineEmits<{
 
 const inputValue = ref('')
 
-// 监听外部数据变化，同步到输入框
 watch(
   () => props.data,
   (newVal) => {
@@ -22,10 +21,11 @@ watch(
 
 function formatJson() {
   try {
-    const parsed = JSON.parse(inputValue.value.trim())
-    // try {
-    //     parsed = JSON.parse(parsed)
-    // } catch (err) { console.log(err) }
+    const firstParse = JSON.parse(inputValue.value.trim())
+    let parsed: any = firstParse
+    try {
+      parsed = JSON.parse(parsed)
+    } catch (err) { console.log(err) }
     emit('update', parsed)
     inputValue.value = JSON.stringify(parsed, null, 2)
   } catch (err: unknown) {
