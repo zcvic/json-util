@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import JsonNode from '@/components/JsonNode.vue'
-import { reactive } from 'vue';
+import JsonSearch from '@/components/JsonSearch.vue'
+import { reactive, ref } from 'vue';
 
 const props = defineProps<{ data: any }>()
 const emit = defineEmits<{
@@ -9,6 +10,7 @@ const emit = defineEmits<{
 }>()
 
 const expandedKeys = reactive<Record<string, boolean>>({});
+const searchResults = ref<Array<{ path: string; value: any; key: string; matchType?: 'key' | 'value' }>>([]);
 
 function copyTree() {
   if (props.data) {
@@ -290,6 +292,104 @@ function addSibling(parentPath: string, index: number) {
   }
 }
 
+// 搜索功能
+function searchJson(payload: { query: string; type: 'all' | 'keys' | 'values'; useRegex: boolean }) {
+  const { query, type, useRegex } = payload;
+  const results: Array<{ path: string; value: any; key: string; matchType?: 'key' | 'value' }> = [];
+
+  if (!query || !props.data) {
+    searchResults.value = results;
+    return;
+  }
+
+  // 递归搜索函数
+  const searchRecursive = (obj: any, currentPath: string, parentKey?: string) => {
+    if (typeof obj === 'object' && obj !== null) {
+      // 搜索键名
+      if (type === 'all' || type === 'keys') {
+        Object.keys(obj).forEach(key => {
+          if (useRegex) {
+            try {
+              const regex = new RegExp(query, 'gi');
+              if (regex.test(key)) {
+                results.push({
+                  path: `${currentPath}.${key}`,
+                  value: obj[key],
+                  key,
+                  matchType: 'key'
+                });
+              }
+            } catch (e) {
+              // 正则表达式无效，忽略
+            }
+          } else {
+            if (key.toLowerCase().includes(query.toLowerCase())) {
+              results.push({
+                path: `${currentPath}.${key}`,
+                value: obj[key],
+                key,
+                matchType: 'key'
+              });
+            }
+          }
+        });
+      }
+
+      // 搜索值
+      if (type === 'all' || type === 'values') {
+        Object.entries(obj).forEach(([key, value]) => {
+          const valueStr = String(value);
+          let matched = false;
+
+          if (useRegex) {
+            try {
+              const regex = new RegExp(query, 'gi');
+              matched = regex.test(valueStr);
+            } catch (e) {
+              // 正则表达式无效，忽略
+            }
+          } else {
+            matched = valueStr.toLowerCase().includes(query.toLowerCase());
+          }
+
+          if (matched) {
+            results.push({
+              path: `${currentPath}.${key}`,
+              value,
+              key,
+              matchType: 'value'
+            });
+          }
+
+          // 递归搜索子对象
+          if (typeof value === 'object' && value !== null) {
+            searchRecursive(value, `${currentPath}.${key}`, key);
+          }
+        });
+      }
+    }
+  };
+
+  // 开始搜索
+  searchRecursive(props.data, 'root');
+  searchResults.value = results;
+}
+
+// 清空搜索结果
+function clearSearch() {
+  searchResults.value = [];
+}
+
+// 导航到搜索结果
+function navigateToResult(result: { path: string; value: any; key: string; matchType?: 'key' | 'value' }) {
+  // 展开所有父节点
+  const pathParts = result.path.split('.');
+  for (let i = 1; i < pathParts.length; i++) {
+    const parentPath = pathParts.slice(0, i).join('.');
+    expandedKeys[parentPath] = true;
+  }
+}
+
 expandedKeys['root'] = true;
 </script>
 
@@ -303,6 +403,13 @@ expandedKeys['root'] = true;
         <button class="copy" @click="copyTree">复制JSON</button>
       </div>
     </div>
+    <JsonSearch 
+      :data="data" 
+      :searchResults="searchResults"
+      @search="searchJson"
+      @clear="clearSearch"
+      @navigate="navigateToResult"
+    />
     <div class="output-section">
       <JsonNode 
         :expandedKeys="expandedKeys" 
